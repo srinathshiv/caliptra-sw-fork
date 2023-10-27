@@ -48,3 +48,9 @@ Test Scenario| Test Name | Runtime Error Code
 ---|---|---
 Tests some common ECDSA problems | **ecdsa_cmd_run_wycheproof** | N/A
 Tests some common HMAC problems | **hmac_cmd_run_wycheproof** | N/A
+
+<br><br>
+# **Stress Tests**
+Test Scenario| Test Name | Runtime Error Code
+---|---|---
+Perform many hitless updates in a row | **test_stress_update** | N/A
