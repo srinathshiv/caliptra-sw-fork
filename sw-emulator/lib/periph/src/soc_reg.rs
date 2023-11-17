@@ -805,11 +805,12 @@ impl SocRegistersImpl {
         if size != RvSize::Word {
             Err(BusError::StoreAccessFault)?
         }
+        self.bus_warm_reset();
 
         // [TODO] Enable warm reset after design agreement.
         // // Schedule warm reset timer action.
-        // self.op_reset_trigger_action =
-        //     Some(self.timer.schedule_reset_in(0, TimerActionType::WarmReset));
+         self.op_reset_trigger_action =
+             Some(self.timer.schedule_action_in(0, TimerAction::WarmReset));
 
         Ok(())
     }
