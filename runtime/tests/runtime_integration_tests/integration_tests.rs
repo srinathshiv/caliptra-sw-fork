@@ -121,7 +121,7 @@ fn test_stress_update() {
     ];
     let mut model = run_rt_test(None, None, None);
 
-    let stress_num: u32 = 50;
+    let stress_num: u32 = 500;
     let mut image_select = 0;
 
     model.step_until(|m| m.soc_mbox().status().read().mbox_fsm_ps().mbox_idle());
