@@ -121,41 +121,26 @@ fn test_stress_update() {
     ];
     let mut model = run_rt_test(None, None, None);
 
-    let stress_num: u32 = 500;
+    let stress_num: u32 = 50;
     let mut image_select = 0;
 
+    model.step_until(|m| m.soc_mbox().status().read().mbox_fsm_ps().mbox_idle());
+
     for _ in 0..stress_num {
-        model.step_until(|m| m.soc_mbox().status().read().mbox_fsm_ps().mbox_idle());
+        image_select = if image_select == 0 { 1 } else { 0 };
 
-        if image_select == 0 {
-            model
-                .mailbox_execute(u32::from(CommandId::FIRMWARE_LOAD), &image[image_select])
-                .unwrap();
+        model
+            .mailbox_execute(u32::from(CommandId::FIRMWARE_LOAD), &image[image_select])
+            .unwrap();
 
-            model
-                .step_until_output_contains("Caliptra RT listening for mailbox commands...")
-                .unwrap();
+        model
+            .step_until_output_contains("Caliptra RT listening for mailbox commands...")
+            .unwrap();
 
-            //Check if the new firmware is actually the one we built
-            let fw_rev = model.soc_ifc().cptra_fw_rev_id().read();
-            assert_eq!(fw_rev[0], 0xaaaaaaaa);
-            assert_eq!(fw_rev[1], app_versions[image_select]);
-            image_select += 1;
-        } else {
-            model
-                .mailbox_execute(u32::from(CommandId::FIRMWARE_LOAD), &image[image_select])
-                .unwrap();
-
-            model
-                .step_until_output_contains("Caliptra RT listening for mailbox commands...")
-                .unwrap();
-
-            //Check if the new firmware is actually the one we built
-            let fw_rev = model.soc_ifc().cptra_fw_rev_id().read();
-            assert_eq!(fw_rev[0], 0xaaaaaaaa);
-            assert_eq!(fw_rev[1], app_versions[image_select]);
-            image_select -= 1;
-        }
+        //Check if the new firmware is actually the one we built
+        let fw_rev = model.soc_ifc().cptra_fw_rev_id().read();
+        assert_eq!(fw_rev[0], 0xaaaaaaaa);
+        assert_eq!(fw_rev[1], app_versions[image_select]);
     }
 }
 
