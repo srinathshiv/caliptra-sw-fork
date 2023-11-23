@@ -17,8 +17,6 @@ References:
 
 use core::cell::Cell;
 
-use caliptra_error::CaliptraResult;
-
 use crate::{cfi_panic, CfiPanicInfo};
 
 /// Provides an implementation of the xoshiro128** algorithm. This implementation is used
@@ -38,7 +36,6 @@ pub struct Xoshiro128 {
 
 impl Xoshiro128 {
     /// Create a new instance of the xoshiro128** algorithm seeded with zeroes.
-    #[allow(unused)]
     pub(crate) const fn new_unseeded() -> Self {
         Self::new_with_seed(0, 0, 0, 0)
     }
@@ -53,14 +50,24 @@ impl Xoshiro128 {
         }
     }
 
-    #[inline(never)]
-    pub fn mix_entropy(&self, entropy_gen: &mut impl FnMut() -> CaliptraResult<[u32; 12]>) {
+    /// Get a reference to a xoshiro instance backed by static memory
+    ///
+    /// # Safety
+    ///
+    /// Caller must verify that the memory locations between `addr` and
+    /// `addr + size_of::<Xoshiro128>()` are valid and meet the alignment
+    /// requirements of Xoshiro128, and are not used for anything else.
+    pub unsafe fn from_address(addr: u32) -> &'static Self {
+        &*(addr as *const Xoshiro128)
+    }
+
+    pub fn mix_entropy_from_trng(&self, trng: &mut caliptra_drivers::Trng) {
         loop {
-            if let Ok(entropy) = entropy_gen() {
-                self.s0.set(self.s0.get() ^ entropy[0]);
-                self.s1.set(self.s1.get() ^ entropy[1]);
-                self.s2.set(self.s2.get() ^ entropy[2]);
-                self.s3.set(self.s3.get() ^ entropy[3]);
+            if let Ok(entropy) = trng.generate() {
+                self.s0.set(self.s0.get() ^ entropy.0[0]);
+                self.s1.set(self.s1.get() ^ entropy.0[1]);
+                self.s2.set(self.s2.get() ^ entropy.0[2]);
+                self.s3.set(self.s3.get() ^ entropy.0[3]);
             } else {
                 cfi_panic(CfiPanicInfo::TrngError)
             }

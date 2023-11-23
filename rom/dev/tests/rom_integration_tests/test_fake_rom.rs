@@ -67,7 +67,7 @@ fn test_fake_rom_production_error() {
     // Make sure we see the right fatal error
     assert_eq!(
         hw.soc_ifc().cptra_fw_error_fatal().read(),
-        u32::from(CaliptraError::ROM_GLOBAL_FAKE_ROM_IN_PRODUCTION)
+        CaliptraError::ROM_GLOBAL_FAKE_ROM_IN_PRODUCTION.into()
     );
 }
 
@@ -202,6 +202,6 @@ fn test_image_verify() {
 
     assert_eq!(
         hw.soc_ifc().cptra_boot_status().read(),
-        u32::from(FwProcessorManifestLoadComplete)
+        FwProcessorManifestLoadComplete.into()
     );
 }

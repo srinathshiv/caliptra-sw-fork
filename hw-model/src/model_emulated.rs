@@ -1,9 +1,10 @@
 // Licensed under the Apache-2.0 license
 
 use std::cell::Cell;
+use std::env;
 use std::error::Error;
 use std::io::Write;
-use std::path::PathBuf;
+use std::path::Path;
 use std::rc::Rc;
 
 use caliptra_emu_bus::Clock;
@@ -17,7 +18,6 @@ use caliptra_hw_model_types::ErrorInjectionMode;
 
 use crate::bus_logger::BusLogger;
 use crate::bus_logger::LogFile;
-use crate::trace_path_or_env;
 use crate::InitParams;
 use crate::ModelError;
 use crate::Output;
@@ -54,22 +54,6 @@ pub struct ModelEmulated {
     trace_fn: Option<Box<InstrTracer<'static>>>,
     ready_for_fw: Rc<Cell<bool>>,
     cpu_enabled: Rc<Cell<bool>>,
-    trace_path: Option<PathBuf>,
-
-    image_tag: u64,
-}
-impl Drop for ModelEmulated {
-    fn drop(&mut self) {
-        let cov_path =
-            std::env::var(caliptra_coverage::CPTRA_COVERAGE_PATH).unwrap_or_else(|_| "".into());
-        if cov_path.is_empty() {
-            return;
-        }
-
-        let bitmap = self.code_coverage_bitmap();
-        let _ =
-            caliptra_coverage::dump_emu_coverage_to_file(cov_path.as_str(), self.image_tag, bitmap);
-    }
 }
 
 impl ModelEmulated {
@@ -85,9 +69,6 @@ impl crate::HwModel for ModelEmulated {
     where
         Self: Sized,
     {
-        use std::collections::hash_map::DefaultHasher;
-        use std::hash::Hasher;
-
         let clock = Clock::new();
         let timer = clock.timer();
 
@@ -143,10 +124,6 @@ impl crate::HwModel for ModelEmulated {
         let soc_to_caliptra_bus = root_bus.soc_to_caliptra_bus();
         let cpu = Cpu::new(BusLogger::new(root_bus), clock);
 
-        let mut hasher = DefaultHasher::new();
-        std::hash::Hash::hash_slice(params.rom, &mut hasher);
-        let image_tag = hasher.finish();
-
         let mut m = ModelEmulated {
             output,
             cpu,
@@ -154,10 +131,8 @@ impl crate::HwModel for ModelEmulated {
             trace_fn: None,
             ready_for_fw,
             cpu_enabled,
-            trace_path: trace_path_or_env(params.trace_path),
-            image_tag,
         };
-        // Turn tracing on if the trace path was set
+        // Turn tracing on if CPTRA_TRACE_PATH environment variable is set
         m.tracing_hint(true);
 
         Ok(m)
@@ -178,7 +153,7 @@ impl crate::HwModel for ModelEmulated {
 
     fn output(&mut self) -> &mut Output {
         // In case the caller wants to log something, make sure the log has the
-        // correct time.env::
+        // correct time.
         self.output.sink().set_now(self.cpu.clock.now());
         &mut self.output
     }
@@ -190,11 +165,12 @@ impl crate::HwModel for ModelEmulated {
         }
         self.trace_fn = None;
         self.cpu.bus.log = None;
-        let Some(trace_path) = &self.trace_path else {
+        let trace_path = env::var("CPTRA_TRACE_PATH").unwrap_or_else(|_| "".into());
+        if trace_path.is_empty() {
             return;
-        };
+        }
 
-        let mut log = match LogFile::open(trace_path) {
+        let mut log = match LogFile::open(Path::new(&trace_path)) {
             Ok(file) => file,
             Err(e) => {
                 eprintln!("Unable to open file {trace_path:?}: {e}");

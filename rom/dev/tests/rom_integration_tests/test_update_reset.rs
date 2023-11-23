@@ -2,9 +2,8 @@
 
 use caliptra_builder::{
     firmware::{
-        self,
         rom_tests::{TEST_FMC_INTERACTIVE, TEST_FMC_WITH_UART},
-        APP_WITH_UART,
+        APP_WITH_UART, ROM_WITH_UART,
     },
     ImageOptions,
 };
@@ -22,7 +21,7 @@ const TEST_FMC_CMD_RESET_FOR_UPDATE_KEEP_MBOX_CMD: u32 = 0x1000_000B;
 
 #[test]
 fn test_update_reset_success() {
-    let rom = caliptra_builder::build_firmware_rom(firmware::rom_from_env()).unwrap();
+    let rom = caliptra_builder::build_firmware_rom(&ROM_WITH_UART).unwrap();
     let image_bundle = caliptra_builder::build_and_sign_image(
         &TEST_FMC_INTERACTIVE,
         &APP_WITH_UART,
@@ -67,7 +66,7 @@ fn test_update_reset_success() {
 
 #[test]
 fn test_update_reset_no_mailbox_cmd() {
-    let rom = caliptra_builder::build_firmware_rom(firmware::rom_from_env()).unwrap();
+    let rom = caliptra_builder::build_firmware_rom(&ROM_WITH_UART).unwrap();
     let image_bundle = caliptra_builder::build_and_sign_image(
         &TEST_FMC_WITH_UART,
         &APP_WITH_UART,
@@ -99,7 +98,7 @@ fn test_update_reset_no_mailbox_cmd() {
     hw.step_until(|m| m.soc_ifc().cptra_fw_error_non_fatal().read() != 0);
     assert_eq!(
         hw.soc_ifc().cptra_fw_error_non_fatal().read(),
-        u32::from(CaliptraError::ROM_UPDATE_RESET_FLOW_MAILBOX_ACCESS_FAILURE)
+        CaliptraError::ROM_UPDATE_RESET_FLOW_MAILBOX_ACCESS_FAILURE.into()
     );
 
     let _ = hw.mailbox_execute(0xDEADBEEF, &[]);
@@ -107,13 +106,13 @@ fn test_update_reset_no_mailbox_cmd() {
 
     assert_eq!(
         hw.soc_ifc().cptra_boot_status().read(),
-        u32::from(UpdateResetStarted)
+        UpdateResetStarted.into()
     );
 }
 
 #[test]
 fn test_update_reset_non_fw_load_cmd() {
-    let rom = caliptra_builder::build_firmware_rom(firmware::rom_from_env()).unwrap();
+    let rom = caliptra_builder::build_firmware_rom(&ROM_WITH_UART).unwrap();
     let image_bundle = caliptra_builder::build_and_sign_image(
         &TEST_FMC_WITH_UART,
         &APP_WITH_UART,
@@ -145,18 +144,18 @@ fn test_update_reset_non_fw_load_cmd() {
 
     assert_eq!(
         hw.soc_ifc().cptra_fw_error_non_fatal().read(),
-        u32::from(CaliptraError::ROM_UPDATE_RESET_FLOW_INVALID_FIRMWARE_COMMAND)
+        CaliptraError::ROM_UPDATE_RESET_FLOW_INVALID_FIRMWARE_COMMAND.into()
     );
 
     assert_eq!(
         hw.soc_ifc().cptra_boot_status().read(),
-        u32::from(UpdateResetStarted)
+        UpdateResetStarted.into()
     );
 }
 
 #[test]
 fn test_update_reset_verify_image_failure() {
-    let rom = caliptra_builder::build_firmware_rom(firmware::rom_from_env()).unwrap();
+    let rom = caliptra_builder::build_firmware_rom(&ROM_WITH_UART).unwrap();
     let image_bundle = caliptra_builder::build_and_sign_image(
         &TEST_FMC_WITH_UART,
         &APP_WITH_UART,
@@ -194,18 +193,18 @@ fn test_update_reset_verify_image_failure() {
 
     assert_eq!(
         hw.soc_ifc().cptra_fw_error_non_fatal().read(),
-        u32::from(CaliptraError::IMAGE_VERIFIER_ERR_MANIFEST_MARKER_MISMATCH)
+        CaliptraError::IMAGE_VERIFIER_ERR_MANIFEST_MARKER_MISMATCH.into()
     );
 
     assert_eq!(
         hw.soc_ifc().cptra_boot_status().read(),
-        u32::from(UpdateResetLoadManifestComplete)
+        UpdateResetLoadManifestComplete.into()
     );
 }
 
 #[test]
 fn test_update_reset_boot_status() {
-    let rom = caliptra_builder::build_firmware_rom(firmware::rom_from_env()).unwrap();
+    let rom = caliptra_builder::build_firmware_rom(&ROM_WITH_UART).unwrap();
     let image_bundle = caliptra_builder::build_and_sign_image(
         &TEST_FMC_INTERACTIVE,
         &APP_WITH_UART,
@@ -258,7 +257,7 @@ fn test_update_reset_boot_status() {
 
 #[test]
 fn test_update_reset_vendor_ecc_pub_key_idx_dv_mismatch() {
-    let rom = caliptra_builder::build_firmware_rom(firmware::rom_from_env()).unwrap();
+    let rom = caliptra_builder::build_firmware_rom(&ROM_WITH_UART).unwrap();
     let vendor_config_cold_boot = ImageGeneratorVendorConfig {
         ecc_key_idx: 3,
         ..VENDOR_CONFIG_KEY_0
@@ -321,13 +320,13 @@ fn test_update_reset_vendor_ecc_pub_key_idx_dv_mismatch() {
 
     assert_eq!(
         hw.soc_ifc().cptra_fw_error_non_fatal().read(),
-        u32::from(CaliptraError::IMAGE_VERIFIER_ERR_UPDATE_RESET_VENDOR_ECC_PUB_KEY_IDX_MISMATCH)
+        CaliptraError::IMAGE_VERIFIER_ERR_UPDATE_RESET_VENDOR_ECC_PUB_KEY_IDX_MISMATCH.into()
     );
 }
 
 #[test]
 fn test_update_reset_vendor_lms_pub_key_idx_dv_mismatch() {
-    let rom = caliptra_builder::build_firmware_rom(firmware::rom_from_env()).unwrap();
+    let rom = caliptra_builder::build_firmware_rom(&ROM_WITH_UART).unwrap();
     let vendor_config_cold_boot = ImageGeneratorVendorConfig {
         lms_key_idx: 3,
         ..VENDOR_CONFIG_KEY_0
@@ -389,13 +388,13 @@ fn test_update_reset_vendor_lms_pub_key_idx_dv_mismatch() {
 
     assert_eq!(
         hw.soc_ifc().cptra_fw_error_non_fatal().read(),
-        u32::from(CaliptraError::IMAGE_VERIFIER_ERR_UPDATE_RESET_VENDOR_LMS_PUB_KEY_IDX_MISMATCH)
+        CaliptraError::IMAGE_VERIFIER_ERR_UPDATE_RESET_VENDOR_LMS_PUB_KEY_IDX_MISMATCH.into()
     );
 }
 
 #[test]
 fn test_check_rom_update_reset_status_reg() {
-    let rom = caliptra_builder::build_firmware_rom(firmware::rom_from_env()).unwrap();
+    let rom = caliptra_builder::build_firmware_rom(&ROM_WITH_UART).unwrap();
     let image_bundle = caliptra_builder::build_and_sign_image(
         &TEST_FMC_INTERACTIVE,
         &APP_WITH_UART,
@@ -445,5 +444,5 @@ fn test_check_rom_update_reset_status_reg() {
     warmresetentry4_offset += core::mem::size_of::<u32>();
     let warmresetentry4_value =
         u32::read_from_prefix(warmresetentry4_array[warmresetentry4_offset..].as_bytes()).unwrap();
-    assert_eq!(warmresetentry4_value, u32::from(UpdateResetComplete));
+    assert_eq!(warmresetentry4_value, UpdateResetComplete.into());
 }

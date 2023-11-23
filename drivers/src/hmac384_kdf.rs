@@ -12,10 +12,9 @@ Abstract:
 
 --*/
 
-use crate::{Hmac384, Hmac384Key, Hmac384Tag, Trng};
-#[cfg(not(feature = "no-cfi"))]
-use caliptra_cfi_derive::cfi_mod_fn;
 use caliptra_error::CaliptraResult;
+
+use crate::{Hmac384, Hmac384Key, Hmac384Tag, Trng};
 
 /// Calculate HMAC-384-KDF
 ///
@@ -32,7 +31,6 @@ use caliptra_error::CaliptraResult;
 ///               the label and context.
 /// * `trng` - TRNG driver instance
 /// * `output` - Location to store the output
-#[cfg_attr(not(feature = "no-cfi"), cfi_mod_fn)]
 pub fn hmac384_kdf(
     hmac: &mut Hmac384,
     key: Hmac384Key,

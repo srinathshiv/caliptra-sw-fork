@@ -21,7 +21,6 @@ use caliptra_drivers::{
 };
 use caliptra_drivers_test_bin::{DoeTestResults, DOE_TEST_HMAC_KEY, DOE_TEST_IV};
 
-use caliptra_cfi_lib::CfiCounter;
 use caliptra_registers::ecc::EccReg;
 use caliptra_registers::soc_ifc::SocIfcReg;
 use caliptra_registers::soc_ifc_trng::SocIfcTrngReg;
@@ -36,7 +35,7 @@ fn export_result_from_kv(ecc: &mut Ecc384, trng: &mut Trng, key_id: KeyId) -> Ec
         &KeyReadArgs::new(key_id).into(),
         &Array4x12::default(),
         trng,
-        KeyWriteArgs::new(KeyId::KeyId3, KeyUsage::default().set_ecc_private_key_en()).into(),
+        KeyWriteArgs::new(KeyId::KeyId3, KeyUsage::default()).into(),
     )
     .unwrap()
 }
@@ -56,11 +55,6 @@ fn test_decrypt() {
         )
         .unwrap()
     };
-
-    // Init CFI
-    let mut entropy_gen = || trng.generate().map(|a| a.0);
-    CfiCounter::reset(&mut entropy_gen);
-
     assert_eq!(
         doe.decrypt_uds(&Array4x4::from(DOE_TEST_IV), KeyId::KeyId0)
             .ok(),

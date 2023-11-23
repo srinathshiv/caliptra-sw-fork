@@ -71,10 +71,9 @@ pub extern "C" fn rom_entry() -> ! {
 
     if !cfg!(feature = "no-cfi") {
         cprintln!("[state] CFI Enabled");
-        let mut entropy_gen = || env.trng.generate().map(|a| a.0);
-        CfiCounter::reset(&mut entropy_gen);
-        CfiCounter::reset(&mut entropy_gen);
-        CfiCounter::reset(&mut entropy_gen);
+        CfiCounter::reset(&mut env.trng);
+        CfiCounter::reset(&mut env.trng);
+        CfiCounter::reset(&mut env.trng);
     } else {
         cprintln!("[state] CFI Disabled");
     }
@@ -309,7 +308,7 @@ fn handle_non_fatal_error(code: u32) {
 
 #[no_mangle]
 extern "C" fn cfi_panic_handler(code: u32) -> ! {
-    cprintln!("[ROM] CFI Panic code=0x{:08X}", code);
+    cprintln!("CFI Panic code=0x{:08X}", code);
 
     handle_fatal_error(code);
 }

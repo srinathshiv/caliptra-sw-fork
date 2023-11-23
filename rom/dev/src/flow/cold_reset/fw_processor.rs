@@ -335,12 +335,10 @@ impl FirmwareProcessor {
             image: venv.image,
         };
 
-        // Random delay for CFI glitch protection.
-        CfiCounter::delay();
-        CfiCounter::delay();
-        CfiCounter::delay();
-        CfiCounter::delay();
-
+        // Random delays for CFI glitch protection.
+        for _ in 0..4 {
+            CfiCounter::delay();
+        }
         let mut verifier = ImageVerifier::new(venv);
         let info = verifier.verify(manifest, img_bundle_sz, ResetReason::ColdReset)?;
 

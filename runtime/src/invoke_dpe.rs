@@ -1,6 +1,6 @@
 // Licensed under the Apache-2.0 license
 
-use crate::{CptraDpeTypes, DpeCrypto, DpeEnv, DpePlatform, Drivers, PL0_PAUSER_FLAG};
+use crate::{CptraDpeTypes, DpeCrypto, DpeEnv, DpePlatform, Drivers};
 use caliptra_common::mailbox_api::{InvokeDpeReq, InvokeDpeResp, MailboxResp, MailboxRespHeader};
 use caliptra_drivers::{CaliptraError, CaliptraResult};
 use crypto::{AlgLen, Crypto};
@@ -16,6 +16,7 @@ use zerocopy::FromBytes;
 
 pub struct InvokeDpeCmd;
 impl InvokeDpeCmd {
+    const PL0_PAUSER_FLAG: u32 = 1;
     pub const PL0_DPE_ACTIVE_CONTEXT_THRESHOLD: usize = 8;
     pub const PL1_DPE_ACTIVE_CONTEXT_THRESHOLD: usize = 16;
 
@@ -146,6 +147,6 @@ impl InvokeDpeCmd {
     }
 
     fn is_caller_pl1(pl0_pauser: u32, flags: u32, locality: u32) -> bool {
-        flags & PL0_PAUSER_FLAG == 0 && locality != pl0_pauser
+        flags & Self::PL0_PAUSER_FLAG == 0 && locality != pl0_pauser
     }
 }

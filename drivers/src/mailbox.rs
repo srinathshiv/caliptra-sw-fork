@@ -17,7 +17,6 @@ use crate::{CaliptraError, CaliptraResult};
 use caliptra_registers::mbox::enums::MboxFsmE;
 use caliptra_registers::mbox::enums::MboxStatusE;
 use caliptra_registers::mbox::MboxCsr;
-use caliptra_registers::soc_ifc::SocIfcReg;
 use core::cmp::min;
 use core::mem::size_of;
 use core::slice;
@@ -416,9 +415,6 @@ impl MailboxRecvTxn<'_> {
             return Err(CaliptraError::DRIVER_MAILBOX_INVALID_STATE);
         }
         fifo::dequeue(self.mbox, data);
-        if mailbox_uncorrectable_ecc() {
-            return Err(CaliptraError::DRIVER_MAILBOX_UNCORRECTABLE_ECC);
-        }
         Ok(())
     }
 
@@ -511,16 +507,5 @@ impl Drop for MailboxRecvTxn<'_> {
             // Execute -> Idle (releases lock)
             let _ = self.complete(false);
         }
-    }
-}
-
-fn mailbox_uncorrectable_ecc() -> bool {
-    unsafe {
-        SocIfcReg::new()
-            .regs()
-            .intr_block_rf()
-            .error_internal_intr_r()
-            .read()
-            .error_mbox_ecc_unc_sts()
     }
 }

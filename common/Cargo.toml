@@ -22,4 +22,3 @@ zerocopy.workspace = true
 default = ["std"]
 emu = ["caliptra-drivers/emu"]
 std = []
-test_only_commands = ["caliptra-api/test_only_commands"]
