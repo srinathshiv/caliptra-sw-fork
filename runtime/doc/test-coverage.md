@@ -54,3 +54,8 @@ Tests some common HMAC problems | **hmac_cmd_run_wycheproof** | N/A
 Test Scenario| Test Name | Runtime Error Code
 ---|---|---
 Perform many hitless updates in a row | **test_stress_update** | N/A
+Check validation of DPE structure after a warm/update reset and ensure that validation fails if the DPE's SRAM bytes are maliciously edited | N/A | N/A
+Verify the RT Journey PCR on a warm reset | N/A | N/A
+Check that the RT Journey PCR was updated correctly on update reset | N/A | N/A
+Check if disable attestation was called when the mailbox is executing a command during a warm reset | N/A | N/A
+Check that measurements in the measurement log are added to DPE upon initializing drivers | N/A | N/A
